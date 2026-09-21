@@ -192,3 +192,79 @@ export async function listAssignments(): Promise<AssignmentRow[]> {
     ORDER BY f.full_name, s.code, p.code, lb.code
   `) as AssignmentRow[];
 }
+
+/* ------------------------------------------------------------------ */
+/*  Phase 5 — Timetable view                                          */
+/* ------------------------------------------------------------------ */
+
+export type PeriodRow = {
+  id: number;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  kind: "teachable" | "lunch";
+};
+
+export type TimetableViewRow = {
+  id: number;
+  assignment_id: number;
+  faculty_id: number;
+  faculty_name: string;
+  panel_id: number;
+  panel_code: string;
+  lab_batch_id: number | null;
+  lab_batch_code: string | null;
+  room_id: number;
+  room_code: string;
+  room_kind: "classroom" | "lab";
+  period_id: number;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  subject_code: string;
+  subject_kind: "theory" | "practical";
+  session_id: string | null;
+};
+
+export async function listPeriods(): Promise<PeriodRow[]> {
+  const db = sql();
+  return (await db`
+    SELECT id, weekday, start_time::text, end_time::text, kind
+    FROM period
+    ORDER BY weekday, start_time
+  `) as PeriodRow[];
+}
+
+export async function listTimetableEntries(): Promise<TimetableViewRow[]> {
+  const db = sql();
+  return (await db`
+    SELECT
+      te.id,
+      te.assignment_id,
+      te.faculty_id,
+      f.full_name AS faculty_name,
+      te.panel_id,
+      p.code AS panel_code,
+      te.lab_batch_id,
+      lb.code AS lab_batch_code,
+      te.room_id,
+      r.code AS room_code,
+      r.kind AS room_kind,
+      te.period_id,
+      per.weekday,
+      per.start_time::text,
+      per.end_time::text,
+      s.code AS subject_code,
+      s.kind AS subject_kind,
+      te.session_id::text
+    FROM timetable_entry te
+    JOIN faculty f ON f.id = te.faculty_id
+    JOIN teaching_assignment ta ON ta.id = te.assignment_id
+    JOIN subject s ON s.id = ta.subject_id
+    JOIN panel p ON p.id = te.panel_id
+    LEFT JOIN lab_batch lb ON lb.id = te.lab_batch_id
+    JOIN room r ON r.id = te.room_id
+    JOIN period per ON per.id = te.period_id
+    ORDER BY per.weekday, per.start_time
+  `) as TimetableViewRow[];
+}

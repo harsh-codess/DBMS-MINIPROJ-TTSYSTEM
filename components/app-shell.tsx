@@ -6,6 +6,7 @@ import { AppUserMenu } from "./auth-controls";
 
 const nav = [
   { href: "/app", label: "Overview", icon: OverviewIcon },
+  { href: "/app/timetable", label: "Timetable", icon: TimetableIcon },
   { href: "/app/faculty", label: "Faculty", icon: FacultyIcon },
   { href: "/app/rooms", label: "Rooms", icon: RoomIcon },
   { href: "/app/assignments", label: "Assignments", icon: AssignIcon },
@@ -120,6 +121,15 @@ function AssignIcon() {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
       <rect x="3.5" y="3.5" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.4" />
       <path d="M6 7.2h6M6 9.4h6M6 11.6h3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TimetableIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <rect x="2.5" y="3.5" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2.5 7h13M7 7v7.5M11 7v7.5" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
 }

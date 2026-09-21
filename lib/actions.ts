@@ -1,7 +1,12 @@
+"use server";
+
 import { requireAdmin } from "@/lib/guard";
 import { sql } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { generateTimetable, validatePlacement } from "@/lib/engine";
+import type { GenerationResult, ClashReason } from "@/lib/engine";
+import { loadCatalog, loadExistingEntries, persistTimetable } from "@/lib/generate-queries";
 
 function readString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -12,7 +17,6 @@ function readNumber(formData: FormData, key: string) {
 }
 
 export async function createFaculty(formData: FormData) {
-  "use server";
   await requireAdmin();
   const fullName = readString(formData, "full_name");
   const dutyWindowId = readNumber(formData, "duty_window_id");
@@ -31,7 +35,6 @@ export async function createFaculty(formData: FormData) {
 }
 
 export async function updateFaculty(formData: FormData) {
-  "use server";
   await requireAdmin();
   const id = readNumber(formData, "id");
   const fullName = readString(formData, "full_name");
@@ -52,7 +55,6 @@ export async function updateFaculty(formData: FormData) {
 }
 
 export async function deleteFaculty(formData: FormData) {
-  "use server";
   await requireAdmin();
   const id = readNumber(formData, "id");
   try {
@@ -66,7 +68,6 @@ export async function deleteFaculty(formData: FormData) {
 }
 
 export async function createRoom(formData: FormData) {
-  "use server";
   await requireAdmin();
   const code = readString(formData, "code");
   const kind = readString(formData, "kind");
@@ -92,7 +93,6 @@ export async function createRoom(formData: FormData) {
 }
 
 export async function updateRoom(formData: FormData) {
-  "use server";
   await requireAdmin();
   const id = readNumber(formData, "id");
   const code = readString(formData, "code");
@@ -120,7 +120,6 @@ export async function updateRoom(formData: FormData) {
 }
 
 export async function deleteRoom(formData: FormData) {
-  "use server";
   await requireAdmin();
   const id = readNumber(formData, "id");
   try {
@@ -134,7 +133,6 @@ export async function deleteRoom(formData: FormData) {
 }
 
 export async function createAssignment(formData: FormData) {
-  "use server";
   await requireAdmin();
   const facultyId = readNumber(formData, "faculty_id");
   const subjectId = readNumber(formData, "subject_id");
@@ -159,7 +157,6 @@ export async function createAssignment(formData: FormData) {
 }
 
 export async function deleteAssignment(formData: FormData) {
-  "use server";
   await requireAdmin();
   const id = readNumber(formData, "id");
   try {
@@ -170,4 +167,119 @@ export async function deleteAssignment(formData: FormData) {
   }
   revalidatePath("/app");
   redirect("/app/assignments?ok=Assignment+removed");
+}
+
+/* ------------------------------------------------------------------ */
+/*  Phase 4 — Generate timetable                                       */
+/* ------------------------------------------------------------------ */
+
+export async function generateTimetableAction(): Promise<GenerationResult> {
+  await requireAdmin();
+
+  const catalog = await loadCatalog();
+  const result = generateTimetable(catalog);
+
+  if (result.success) {
+    await persistTimetable(result.entries);
+    revalidatePath("/app");
+  }
+
+  return result;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Phase 5 — Move a single timetable entry                            */
+/* ------------------------------------------------------------------ */
+
+export async function moveTimetableEntry(
+  entryId: number,
+  newPeriodId: number,
+  newRoomId: number,
+): Promise<{ ok: boolean; reasons: ClashReason[] }> {
+  await requireAdmin();
+
+  const catalog = await loadCatalog();
+  const existing = await loadExistingEntries();
+
+  const entry = existing.find((e) => e.id === entryId);
+  if (!entry) return { ok: false, reasons: [{ code: "UNKNOWN_ASSIGNMENT", message: "Entry not found." }] };
+
+  // Build candidate with the entry's id so the validator ignores itself.
+  const candidate = {
+    ...entry,
+    periodId: newPeriodId,
+    roomId: newRoomId,
+  };
+
+  const result = validatePlacement(candidate, existing, catalog);
+  if (!result.ok) return result;
+
+  const db = sql();
+  await db`
+    UPDATE timetable_entry
+    SET period_id = ${newPeriodId}, room_id = ${newRoomId}
+    WHERE id = ${entryId}
+  `;
+  revalidatePath("/app");
+  return { ok: true, reasons: [] };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Phase 5 — Move a lab session (all cells share session_id)          */
+/* ------------------------------------------------------------------ */
+
+export async function moveLabSession(
+  sessionId: string,
+  periodIdMap: { oldPeriodId: number; newPeriodId: number }[],
+  newRoomId: number,
+): Promise<{ ok: boolean; reasons: ClashReason[] }> {
+  await requireAdmin();
+
+  const catalog = await loadCatalog();
+  const existing = await loadExistingEntries();
+
+  const sessionEntries = existing.filter((e) => e.sessionId === sessionId);
+  if (sessionEntries.length === 0) {
+    return { ok: false, reasons: [{ code: "UNKNOWN_ASSIGNMENT", message: "Session not found." }] };
+  }
+
+  // Build all candidates with new positions.
+  const candidates = sessionEntries.map((entry) => {
+    const mapping = periodIdMap.find((m) => m.oldPeriodId === entry.periodId);
+    return {
+      ...entry,
+      periodId: mapping ? mapping.newPeriodId : entry.periodId,
+      roomId: newRoomId,
+    };
+  });
+
+  // Remove old session entries from existing, then validate each candidate incrementally.
+  const withoutSession = existing.filter((e) => e.sessionId !== sessionId);
+  const allReasons: ClashReason[] = [];
+  const placed = [...withoutSession];
+
+  for (const candidate of candidates) {
+    const result = validatePlacement(candidate, placed, catalog);
+    if (!result.ok) allReasons.push(...result.reasons);
+    placed.push(candidate);
+  }
+
+  if (allReasons.length > 0) {
+    const unique = allReasons.filter(
+      (r, i) => allReasons.findIndex((o) => o.code === r.code && o.message === r.message) === i,
+    );
+    return { ok: false, reasons: unique };
+  }
+
+  // Persist all moves.
+  const db = sql();
+  for (const candidate of candidates) {
+    await db`
+      UPDATE timetable_entry
+      SET period_id = ${candidate.periodId}, room_id = ${newRoomId}
+      WHERE id = ${candidate.id}
+    `;
+  }
+  revalidatePath("/app");
+  return { ok: true, reasons: [] };
 }

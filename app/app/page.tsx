@@ -2,6 +2,8 @@ import { AppShell } from "@/components/app-shell";
 import { asHours } from "@/lib/db";
 import { HoursBar, MetricCard } from "@/components/ui";
 import { getDashboardStats, listFacultyLoads, listRooms } from "@/lib/queries";
+import { GenerateButton } from "@/components/generate-button";
+import { generateTimetableAction } from "@/lib/actions";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -32,26 +34,15 @@ export default async function DashboardPage() {
         <MetricCard
           label="Placed cells"
           value={String(stats.placed)}
-          hint="Generator is Phase 4"
+          hint="Timetable entries"
         />
       </div>
 
-      <div className="mt-6 rounded-2xl bg-white p-5 shadow-[0_0_0_1px_#E8E8E8]">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-[16px] font-semibold">Generate timetable</h2>
-            <p className="mt-1 text-[13px] text-[#8A8A8A]">
-              Master data is live. Auto-placement waits for the constraint engine.
-            </p>
-          </div>
-          <button
-            type="button"
-            disabled
-            className="inline-flex h-10 items-center rounded-xl bg-[#EDEDED] px-4 text-[13px] font-medium text-[#8A8A8A]"
-          >
-            Generate week
-          </button>
-        </div>
+      <div className="mt-6">
+        <GenerateButton
+          action={generateTimetableAction}
+          hasExisting={stats.placed > 0}
+        />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
