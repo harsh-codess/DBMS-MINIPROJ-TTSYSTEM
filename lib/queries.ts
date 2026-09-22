@@ -268,3 +268,79 @@ export async function listTimetableEntries(): Promise<TimetableViewRow[]> {
     ORDER BY per.weekday, per.start_time
   `) as TimetableViewRow[];
 }
+
+/* ------------------------------------------------------------------ */
+/*  Phase 6 — Reports                                                 */
+/* ------------------------------------------------------------------ */
+
+export type FacultyTimetableRow = {
+  full_name: string;
+  duty_window: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  subject: string;
+  kind: "theory" | "practical";
+  panel: string;
+  lab_batch: string | null;
+  room: string;
+};
+
+export type PanelTimetableRow = {
+  panel: string;
+  lab_batch: string | null;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  subject: string;
+  kind: "theory" | "practical";
+  faculty: string;
+  room: string;
+};
+
+export type RoomOccupancyRow = {
+  room: string;
+  kind: "classroom" | "lab";
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  faculty: string;
+  panel: string;
+  subject: string;
+};
+
+export async function getFacultyTimetableReport(): Promise<FacultyTimetableRow[]> {
+  const db = sql();
+  return (await db`
+    SELECT
+      full_name, duty_window, weekday, start_time::text, end_time::text,
+      subject, kind, panel, lab_batch, room
+    FROM v_faculty_timetable
+    ORDER BY full_name, weekday, start_time
+  `) as FacultyTimetableRow[];
+}
+
+export async function getPanelTimetableReport(): Promise<PanelTimetableRow[]> {
+  const db = sql();
+  return (await db`
+    SELECT
+      panel, lab_batch, weekday, start_time::text, end_time::text,
+      subject, kind, faculty, room
+    FROM v_panel_timetable
+    ORDER BY panel, lab_batch NULLS FIRST, weekday, start_time
+  `) as PanelTimetableRow[];
+}
+
+export async function getRoomOccupancyReport(): Promise<RoomOccupancyRow[]> {
+  const db = sql();
+  return (await db`
+    SELECT
+      room, kind, weekday, start_time::text, end_time::text,
+      faculty, panel, subject
+    FROM v_room_occupancy
+    ORDER BY room, weekday, start_time
+  `) as RoomOccupancyRow[];
+}
+
+
+

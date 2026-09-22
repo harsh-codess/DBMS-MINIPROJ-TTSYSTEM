@@ -10,6 +10,7 @@ const nav = [
   { href: "/app/faculty", label: "Faculty", icon: FacultyIcon },
   { href: "/app/rooms", label: "Rooms", icon: RoomIcon },
   { href: "/app/assignments", label: "Assignments", icon: AssignIcon },
+  { href: "/app/reports", label: "Reports", icon: ReportIcon },
 ];
 
 export function AppShell({
@@ -23,7 +24,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-[#F5F5F5] text-[#111]">
-      <aside className="flex w-[72px] shrink-0 flex-col items-center border-r border-[#E8E8E8] bg-white py-5">
+      <aside className="flex w-[72px] shrink-0 flex-col items-center border-r border-[#E8E8E8] bg-white py-5 print:hidden">
         <Link
           href="/app"
           className="mb-8 flex h-10 w-10 items-center justify-center rounded-xl bg-[#111] text-white"
@@ -57,7 +58,7 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between px-8">
+        <header className="flex h-16 items-center justify-between px-8 print:hidden">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#111] shadow-[0_0_0_1px_#E8E8E8]">
               <MenuIcon />
@@ -73,7 +74,7 @@ export function AppShell({
           </div>
           <AppUserMenu />
         </header>
-        <main className="flex-1 px-8 pb-10">{children}</main>
+        <main className="flex-1 px-8 pb-10 print:px-0 print:pb-0">{children}</main>
       </div>
     </div>
   );
@@ -130,6 +131,15 @@ function TimetableIcon() {
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
       <rect x="2.5" y="3.5" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
       <path d="M2.5 7h13M7 7v7.5M11 7v7.5" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+function ReportIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path d="M4.5 3h6l4.5 4.5v7.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 013 15V4.5A1.5 1.5 0 014.5 3z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M10.5 3v4.5H15M6.5 10.5h5M6.5 13h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
 }
