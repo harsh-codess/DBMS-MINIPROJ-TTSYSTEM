@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRef, useState } from "react";
 import { AppUserMenu } from "./auth-controls";
 
 const nav = [
@@ -21,70 +22,98 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function keepOpen() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  }
+
+  function scheduleClose() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  }
 
   return (
     <div className="flex min-h-screen bg-[#F5F5F5] text-[#111]">
-      <aside className="flex w-[72px] shrink-0 flex-col items-center border-r border-[#E8E8E8] bg-white py-5 print:hidden">
-        <Link
-          href="/app"
-          className="mb-8 flex h-10 w-10 items-center justify-center rounded-xl bg-[#111] text-white"
-          aria-label="PanelGrid overview"
+      <div className="relative z-20 w-[72px] shrink-0 print:hidden">
+        <aside
+          className={`absolute inset-y-0 left-0 flex flex-col border-r border-[#E8E8E8] bg-white py-5 transition-[width,padding] duration-200 ${
+            open ? "w-[220px] items-stretch px-3" : "w-[72px] items-center"
+          }`}
+          onMouseEnter={keepOpen}
+          onMouseLeave={scheduleClose}
+          onFocusCapture={keepOpen}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              scheduleClose();
+            }
+          }}
         >
-          <span className="text-sm font-semibold tracking-tight">P</span>
-        </Link>
-        <nav className="flex flex-1 flex-col items-center gap-2">
-          {nav.map((item) => {
-            const active =
-              item.href === "/app"
-                ? pathname === "/app"
-                : pathname.startsWith(item.href);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
-                  active
-                    ? "bg-[#111] text-white"
-                    : "text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111]"
-                }`}
-              >
-                <Icon />
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+          <Link
+            href="/app"
+            className={`mb-8 flex h-10 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#111] text-white ${
+              open ? "w-full px-3" : "w-10"
+            }`}
+            aria-label="PanelGrid overview"
+          >
+            <span className="text-sm font-semibold tracking-tight">P</span>
+            {open ? (
+              <span className="text-[13px] font-medium tracking-[0.12em]">PANELGRID</span>
+            ) : null}
+          </Link>
+          <nav className={`flex flex-1 flex-col gap-2 ${open ? "items-stretch" : "items-center"}`}>
+            {nav.map((item) => {
+              const active =
+                item.href === "/app"
+                  ? pathname === "/app"
+                  : pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex h-11 items-center overflow-hidden rounded-xl transition ${
+                    open ? "w-full justify-start gap-3 px-3" : "w-11 justify-center"
+                  } ${
+                    active
+                      ? "bg-[#111] text-white"
+                      : "text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111]"
+                  }`}
+                >
+                  <Icon />
+                  {open ? (
+                    <span className="whitespace-nowrap text-[13px] font-medium">{item.label}</span>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+      </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between px-8 print:hidden">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#111] shadow-[0_0_0_1px_#E8E8E8]">
-              <MenuIcon />
-            </span>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.16em] text-[#8A8A8A]">
-                PanelGrid
-              </p>
-              <h1 className="text-[17px] font-semibold leading-none tracking-tight">
-                {title}
-              </h1>
-            </div>
+      <div
+        className={`flex min-w-0 flex-1 flex-col transition-[padding] duration-200 ${
+          open ? "pl-[148px]" : "pl-0"
+        }`}
+      >
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 print:hidden">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-[#8A8A8A]">
+              PanelGrid
+            </p>
+            <h1 className="truncate text-[17px] font-semibold leading-none tracking-tight">
+              {title}
+            </h1>
           </div>
           <AppUserMenu />
         </header>
-        <main className="flex-1 px-8 pb-10 print:px-0 print:pb-0">{children}</main>
+        <main className="@container min-w-0 flex-1 px-4 pb-10 sm:px-6 lg:px-8 print:px-0 print:pb-0">
+          {children}
+        </main>
       </div>
     </div>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M3 4.5h10M3 8h10M3 11.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
   );
 }
 

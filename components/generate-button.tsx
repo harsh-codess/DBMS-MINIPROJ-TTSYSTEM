@@ -29,14 +29,14 @@ export function GenerateButton({
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[0_0_0_1px_#E8E8E8]">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
+      <div className="flex flex-col gap-3 @[40rem]:flex-row @[40rem]:items-center @[40rem]:justify-between">
+        <div className="min-w-0">
           <h2 className="text-[16px] font-semibold">Generate timetable</h2>
           <p className="mt-1 text-[13px] text-[#8A8A8A]">
             Auto-places all teaching assignments using the constraint engine.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           {confirming && (
             <>
               <span className="text-[13px] text-[#8A8A8A]">

@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   return (
     <AppShell title="Dashboard">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 @[32rem]:grid-cols-2 @[60rem]:grid-cols-4">
         <MetricCard
           label="Faculty"
           value={String(stats.faculty)}
@@ -45,15 +45,15 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <section className="rounded-2xl bg-white p-5 shadow-[0_0_0_1px_#E8E8E8]">
+      <div className="mt-6 grid min-w-0 gap-6 @[52rem]:grid-cols-2">
+        <section className="min-w-0 overflow-x-auto rounded-2xl bg-white p-5 shadow-[0_0_0_1px_#E8E8E8]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[16px] font-semibold">Faculty load</h2>
             <Link href="/app/faculty" className="text-[13px] text-[#6B6B6B]">
               All faculty
             </Link>
           </div>
-          <table className="w-full text-left text-[13px]">
+          <table className="w-full min-w-[32rem] text-left text-[13px]">
             <thead className="text-[#8A8A8A]">
               <tr>
                 <th className="pb-3 font-medium">Name</th>
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
           </table>
         </section>
 
-        <section className="rounded-2xl bg-white p-5 shadow-[0_0_0_1px_#E8E8E8]">
+        <section className="min-w-0 rounded-2xl bg-white p-5 shadow-[0_0_0_1px_#E8E8E8]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[16px] font-semibold">Rooms</h2>
             <Link href="/app/rooms" className="text-[13px] text-[#6B6B6B]">
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
           </div>
           <ul className="divide-y divide-[#F0F0F0]">
             {rooms.map((room) => (
-              <li key={room.id} className="flex items-center justify-between py-3 text-[13px]">
+              <li key={room.id} className="flex items-center justify-between gap-3 py-3 text-[13px]">
                 <div>
                   <p className="font-medium">{room.code}</p>
                   <p className="text-[#8A8A8A]">
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
                     {room.lab_type ? ` · ${room.lab_type}` : ""} · {room.capacity} seats
                   </p>
                 </div>
-                <span className="rounded-full bg-[#F5F5F5] px-2 py-1 text-[11px] uppercase tracking-wide text-[#6B6B6B]">
+                <span className="shrink-0 rounded-full bg-[#F5F5F5] px-2 py-1 text-[11px] uppercase tracking-wide text-[#6B6B6B]">
                   {room.kind}
                 </span>
               </li>

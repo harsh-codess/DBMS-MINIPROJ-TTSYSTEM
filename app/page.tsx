@@ -1,5 +1,7 @@
 import { HeroCta, LandingAuth } from "@/components/landing-auth";
+import Image from "next/image";
 import Link from "next/link";
+import campusPhoto from "../public/mit-wpu-campus.jpg";
 
 export default function HomePage() {
   return (
@@ -140,7 +142,7 @@ export default function HomePage() {
             One grid. Faculty, panel, and room are views of the same cells.
           </h2>
           <p className="max-w-sm text-[14px] text-[#6B6B6B]">
-            Campus photographs come later. The product shot is the timetable.
+            The hero is MIT-WPU’s campus. The product shot is the timetable.
           </p>
         </div>
         <div className="mt-12 overflow-hidden rounded-2xl border border-[#E8E8E8]">
@@ -158,28 +160,17 @@ export default function HomePage() {
 
 function CampusScene() {
   return (
-    <div className="absolute inset-0" aria-hidden>
-      <div className="absolute inset-0 bg-[#8FB0C4]" />
-      <div className="absolute inset-x-0 top-0 h-[58%] bg-gradient-to-b from-[#A9C4D4] to-[#8FB0C4]" />
-      <div className="absolute inset-x-0 bottom-0 h-[46%] bg-[#4A6844]" />
-      <div className="absolute bottom-[42%] left-1/2 h-[38%] w-[18%] -translate-x-1/2 bg-[#D7C9A8]" />
-      <div className="absolute bottom-[38%] left-[18%] h-[44%] w-[22%] bg-[#CFC3A6]">
-        <div className="absolute inset-x-[12%] top-[18%] grid grid-cols-4 gap-2">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <span key={i} className="aspect-square bg-[#8A9BB0]/70" />
-          ))}
-        </div>
-      </div>
-      <div className="absolute bottom-[38%] right-[16%] h-[48%] w-[24%] bg-[#D8CEB4]">
-        <div className="absolute inset-x-0 top-0 h-[22%] bg-[#C4B79A]" />
-        <div className="absolute inset-x-[14%] top-[30%] grid grid-cols-5 gap-1.5">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <span key={i} className="h-6 bg-[#91A3B8]/80" />
-          ))}
-        </div>
-      </div>
-      <div className="absolute bottom-0 left-1/2 h-[42%] w-[14%] -translate-x-1/2 bg-[#C4B48A]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-black/25" />
+    <div className="absolute inset-0">
+      <Image
+        src={campusPhoto}
+        alt="MIT World Peace University campus, Pune — World Peace Centre dome"
+        fill
+        priority
+        placeholder="blur"
+        sizes="100vw"
+        className="object-cover object-[50%_55%]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-black/35" />
     </div>
   );
 }
